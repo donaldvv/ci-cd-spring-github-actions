@@ -33,3 +33,5 @@ replay_pid*
 /dataSources.local.xml
 
 /.idea/
+/HELP.md
+/ci-cd-spring-github-actions.iml
