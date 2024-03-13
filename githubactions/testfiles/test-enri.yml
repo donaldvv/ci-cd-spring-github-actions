@@ -1,0 +1,194 @@
+image: node:18
+
+# enable Docker for your repository
+options:
+  docker: true
+  size: 2x
+
+definitions:
+  caches:
+    node: backend/node_modules
+
+  services:
+    docker:
+      memory: 4096
+
+  steps:
+    - step: &linting
+        name: Linting
+        caches:
+          - node
+        script:
+          - cd backend
+          - npm run lint
+    - step: &testing
+        name: Testing
+        caches:
+          - node
+        script:
+          - cd backend
+          - 'npm run test'
+          # - 'npm run test:e2e'
+    - step: &install_fe_dependencies
+        name: Install Frontend dependencies
+        caches:
+          - node
+        script:
+          - cd frontend
+          - npm ci
+          - npm run build:dev
+          - cp -r dist ../backend/staticContent
+    - step: &install_be_dependencies
+        name: Install Backend dependencies
+        caches:
+          - node
+        script:
+          - cd backend
+          - npm ci
+    - step: &deploy_to_ecr
+        name: Build docker image and deploy to AWS ECR
+        caches:
+          - docker
+        services:
+          - docker
+        size: 2x
+        script:
+          - mkdir -p ./backend/config
+          - echo "{\"BITBUCKET_COMMIT\":\"$BITBUCKET_COMMIT\",\"BITBUCKET_BUILD_NUMBER\":\"$BITBUCKET_BUILD_NUMBER\"}" > ./backend/config/deployment.json
+          - docker build --target production -t $IMAGE_NAME:latest .
+          - pipe: atlassian/aws-ecr-push-image:2.2.0
+            variables:
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              IMAGE_NAME: $IMAGE_NAME
+    - step: &deploy_to_ec2_dev
+        name: Deploy to AWS EC2 dev
+        script:
+          - mkdir -p config
+          - cp docker-compose.yml config
+          - cp .env.dev config
+          - echo "{\"BITBUCKET_COMMIT\":\"$BITBUCKET_COMMIT\",\"BITBUCKET_BUILD_NUMBER\":\"$BITBUCKET_BUILD_NUMBER\"}" > ./config/deployment.json
+          - pipe: atlassian/scp-deploy:1.4.1
+            variables:
+              USER: ubuntu
+              SERVER: $SERVER_IP_DEV
+              REMOTE_PATH: '/home/ubuntu/'
+              LOCAL_PATH: '${BITBUCKET_CLONE_DIR}/config'
+              SSH_KEY: $SSH_KEY
+              EXTRA_ARGS: ['-o', 'StrictHostKeyChecking=no']
+          - pipe: atlassian/ssh-run:0.7.1
+            variables:
+              SSH_USER: ubuntu
+              SERVER: $SERVER_IP_DEV
+              SSH_KEY: $SSH_KEY
+              MODE: script
+              COMMAND: deployment.sh
+              ENV_VARS: >-
+                AWS_ECR_URI=${AWS_ECR_URI}
+                NODE_ENV=dev
+    - step: &deploy_to_ec2_stage
+        name: Deploy to AWS EC2 stage
+        script:
+          - mkdir -p config
+          - cp docker-compose.yml config
+          - cp .env.stage config
+          - echo "{\"BITBUCKET_COMMIT\":\"$BITBUCKET_COMMIT\",\"BITBUCKET_BUILD_NUMBER\":\"$BITBUCKET_BUILD_NUMBER\"}" > ./config/deployment.json
+          - pipe: atlassian/scp-deploy:1.4.1
+            variables:
+              USER: ubuntu
+              SERVER: $SERVER_IP_STAGE
+              REMOTE_PATH: '/home/ubuntu/'
+              LOCAL_PATH: '${BITBUCKET_CLONE_DIR}/config'
+              SSH_KEY: $SSH_KEY
+              EXTRA_ARGS: ['-o', 'StrictHostKeyChecking=no']
+          - pipe: atlassian/ssh-run:0.7.1
+            variables:
+              SSH_USER: ubuntu
+              SERVER: $SERVER_IP_STAGE
+              SSH_KEY: $SSH_KEY
+              MODE: script
+              COMMAND: deployment.sh
+              ENV_VARS: >-
+                AWS_ECR_URI=${AWS_ECR_URI}
+                NODE_ENV=stage
+    - step: &deploy_to_ec2_prod
+        name: Deploy to AWS EC2 prod
+        script:
+          - mkdir -p config
+          - cp docker-compose.yml config
+          - cp .env.prod config
+          - echo "{\"BITBUCKET_COMMIT\":\"$BITBUCKET_COMMIT\",\"BITBUCKET_BUILD_NUMBER\":\"$BITBUCKET_BUILD_NUMBER\"}" > ./config/deployment.json
+          - pipe: atlassian/scp-deploy:1.4.1
+            variables:
+              USER: ubuntu
+              SERVER: $SERVER_IP_PROD
+              REMOTE_PATH: '/home/ubuntu/'
+              LOCAL_PATH: '${BITBUCKET_CLONE_DIR}/config'
+              SSH_KEY: $SSH_KEY
+              EXTRA_ARGS: ['-o', 'StrictHostKeyChecking=no']
+          - pipe: atlassian/ssh-run:0.7.1
+            variables:
+              SSH_USER: ubuntu
+              SERVER: $SERVER_IP_PROD
+              SSH_KEY: $SSH_KEY
+              MODE: script
+              COMMAND: deployment.sh
+              ENV_VARS: >-
+                AWS_ECR_URI=${AWS_ECR_URI}
+                NODE_ENV=prod
+pipelines:
+  default: # Run pipeline when pushing to a branch
+    - parallel:
+        - step: *install_fe_dependencies
+        - step: *install_be_dependencies
+    - parallel:
+        - step: *linting
+        - step: *testing
+  pull-requests:
+    '**': # Run pipeline when creating a PR
+      - parallel:
+          - step: *install_fe_dependencies
+          - step: *install_be_dependencies
+      - parallel:
+          - step: *linting
+          - step: *testing
+  branches:
+    master: # Run pipeline when merging to master
+      - parallel:
+          - step: *install_fe_dependencies
+          - step: *install_be_dependencies
+      - parallel:
+          - step: *linting
+          - step: *testing
+      - step: *deploy_to_ecr
+      - parallel:
+          - step:
+              name: Set environment variables dev
+              image: atlassian/pipelines-awscli
+              script:
+                - aws s3api get-object --bucket fiscalization-croatia-env-variables --key '.env.dev' '.env.dev'
+              artifacts:
+                - .env.dev
+          - step:
+              name: Set environment variables stage
+              image: atlassian/pipelines-awscli
+              script:
+                - aws s3api get-object --bucket fiscalization-croatia-env-variables --key '.env.stage' '.env.stage'
+              artifacts:
+                - .env.stage
+          - step:
+              name: Set environment variables prod
+              image: atlassian/pipelines-awscli
+              script:
+                - aws s3api get-object --bucket fiscalization-croatia-env-variables --key '.env.prod' '.env.prod'
+              artifacts:
+                - .env.prod
+      - parallel:
+          - step: *deploy_to_ec2_dev
+          - step:
+              <<: *deploy_to_ec2_stage
+              trigger: manual
+          - step:
+              <<: *deploy_to_ec2_prod
+              trigger: manual
