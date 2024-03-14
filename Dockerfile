@@ -5,7 +5,7 @@ COPY pom.xml /ci-cd-spring-github-actions
 RUN mvn dependency::resolve
 COPY . /ci-cd-spring-github-actions
 RUN mvn clean
-RUN mvn package - DskipTests -X
+RUN mvn package -DskipTests -X
 
 # Create image based on the Temurin Java 21 image
 FROM eclipse-temurin:21
