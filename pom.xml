@@ -75,7 +75,7 @@
             </plugin>
         </plugins>
         <!-- the result artifact/jar name - required for the Dockerfile -->
-        <finalName>app</finalName>
+        <finalName>ci-cd-spring-github-actions</finalName>
     </build>
 
 </project>
