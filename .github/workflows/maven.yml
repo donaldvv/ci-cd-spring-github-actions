@@ -31,7 +31,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Build & Test with Maven
+    - name: Execute Tests
+      run: mvn -B test --file pom.xml
+
+    - name: Build the app
       run: mvn -B package --file pom.xml
 
     - name: Build & push Docker image
@@ -40,8 +43,8 @@ jobs:
         # secrets are stored in the GitHub repository settings
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        tags: latest
-        image: don1don/ci-cd-spring-github-actions
+        tags: ($date-'%Y-%m-%d-%H-%M-%S')
+        image: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-spring-github-actions
         registry: docker.io
         dockerfile: Dockerfile
 
