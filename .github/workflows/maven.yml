@@ -43,7 +43,7 @@ jobs:
         # secrets are stored in the GitHub repository settings
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        tags: ($date-'%Y-%m-%d-%H-%M-%S')
+        tags: $date-'%Y-%m-%d-%H-%M-%S'
         image: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-spring-github-actions
         registry: docker.io
         dockerfile: Dockerfile
