@@ -73,6 +73,15 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <!-- we need it to match the verison of java that maven will use, to the dockerfile one -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
         </plugins>
         <!-- the result artifact/jar name - required for the Dockerfile -->
         <finalName>ci-cd-spring-github-actions</finalName>

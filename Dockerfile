@@ -1,4 +1,4 @@
-FROM maven:3.9.3 AS build
+FROM maven:3.9.6 AS build
 WORKDIR /ci-cd-spring-github-actions
 ARG CONTAINER_PORT
 COPY pom.xml /ci-cd-spring-github-actions
