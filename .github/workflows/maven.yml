@@ -37,12 +37,6 @@ jobs:
     - name: Build the app
       run: mvn -B package -DskipTests --file pom.xml
 
-    # Run a shell command to create a curr date variable
-#    - name: Get current date (Docker image tag)
-#      id: date
-#      run: |
-#        datetime=$(date -u +'%Y%m%d%H%M%S.%3N')
-#        echo "::set-output name=datetime::$datetime"
     - name: Get current date (Docker image tag)
       id: date
       run: echo "NOW=$(date -u +'%Y%m%dT%H%M%S.%3N')" >> $GITHUB_ENV
