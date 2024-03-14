@@ -6,8 +6,9 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build & Test
+name: CI/CD for Spring Boot App with Maven
 
+# on -> defines the event that triggers the workflow
 on:
   push:
     branches: [ "dev" ]
@@ -15,12 +16,13 @@ on:
     branches: [ "dev" ]
 
 jobs:
+  # build-test -> defines the job name/ID
   build-test:
     permissions: write-all # allows the action to write to the repository (need it to update dependency graph)
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
+    steps:  # defines the sequence of tasks that the job will execute, actions to run, or linux commands to run
+    - uses: actions/checkout@v4  # uses:  -> selects an action to run
 
     - name: Set up JDK 21
       uses: actions/setup-java@v4
