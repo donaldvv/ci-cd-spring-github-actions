@@ -38,11 +38,14 @@ jobs:
       run: mvn -B package -DskipTests --file pom.xml
 
     # Run a shell command to create a curr date variable
+#    - name: Get current date (Docker image tag)
+#      id: date
+#      run: |
+#        datetime=$(date -u +'%Y%m%d%H%M%S.%3N')
+#        echo "::set-output name=datetime::$datetime"
     - name: Get current date (Docker image tag)
       id: date
-      run: |
-        datetime=$(date -u +'%Y%m%d%H%M%S.%3N')
-        echo "::set-output name=datetime::$datetime"
+      run: echo "NOW=$(date -u +'%Y%m%dT%H%M%S.%3N')" >> $GITHUB_ENV
 
     - name: Build & push Docker image
       uses: mr-smithers-excellent/docker-build-push@v5
@@ -50,7 +53,7 @@ jobs:
         # secrets are stored in the GitHub repository settings
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        tags: ${{ steps.date.outputs.date }}
+        tags: ${{ env.NOW }}
         image: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-spring-github-actions
         registry: docker.io
         dockerfile: Dockerfile
