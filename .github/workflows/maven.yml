@@ -35,7 +35,7 @@ jobs:
       run: mvn -B test --file pom.xml
 
     - name: Build the app
-      run: mvn -B package --file pom.xml
+      run: mvn -B package -DskipTests --file pom.xml
 
     - name: Build & push Docker image
       uses: mr-smithers-excellent/docker-build-push@v5
@@ -43,7 +43,7 @@ jobs:
         # secrets are stored in the GitHub repository settings
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
-        tags: $date-'%Y%m%d%H%M%S'
+        tags: ${{ format('{0:yyyyMMddHHmmss}', github.run_id) }}
         image: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-spring-github-actions
         registry: docker.io
         dockerfile: Dockerfile
