@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CiCdSpringGithubActionsApplication {
 
+    // I was here!
+
     public static void main(String[] args) {
         SpringApplication.run(CiCdSpringGithubActionsApplication.class, args);
     }
