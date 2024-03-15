@@ -65,57 +65,57 @@ jobs:
 
     # TODO: 1- get url, branch from corresponding environment
     #       2- Reuse workflows
-    deploy-dev:
-      name: Deploy to dev environment
-      needs: build-test
-      #  This line ensures the job only runs for the 'dev' branch and pull request do not trigger deployment
-      if: github.ref == 'refs/heads/dev' && github.event_name != 'pull_request'
-      runs-on: ubuntu-latest
-      # let's define the environment for which this job is intended - dev
-      environment:
-        name: dev
-        url: https://example-dev.myapp.com # can be retrieved dynamically - just for visualization
-      # Now we would pull the image from docker hub and deploy it to the corresponding dev environment (which we can
-      # define variables and secrets in the Environments for dev). With the chose image storing strat we would need to find docker image by tag: commitSHA-current_date
-      #steps:
-      #- uses: actions/checkout@v2
-      ## Some more steps here ...
-      #- name: Publish to Test PyPI
-      # With env, we extract the variables or secrets of the environment defined above "dev", Here we could have AWS credentials etc.
-      #  env:
-      #    TWINE_USERNAME: "__token__"
-      #    TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #    TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
-      #  run: |
-      #    echo KEY: '${TWINE_PASSWORD}'
-      #    twine check dist/*
-      #    twine upload --verbose --skip-existing dist/*
+  deploy-dev:
+    name: Deploy to dev environment
+    needs: build-test
+    #  This line ensures the job only runs for the 'dev' branch and pull request do not trigger deployment
+    if: github.ref == 'refs/heads/dev' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # let's define the environment for which this job is intended - dev
+    environment:
+      name: dev
+      url: https://example-dev.myapp.com # can be retrieved dynamically - just for visualization
+    # Now we would pull the image from docker hub and deploy it to the corresponding dev environment (which we can
+    # define variables and secrets in the Environments for dev). With the chose image storing strat we would need to find docker image by tag: commitSHA-current_date
+    #steps:
+    #- uses: actions/checkout@v2
+    ## Some more steps here ...
+    #- name: Publish to Test PyPI
+    # With env, we extract the variables or secrets of the environment defined above "dev", Here we could have AWS credentials etc.
+    #  env:
+    #    TWINE_USERNAME: "__token__"
+    #    TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+    #    TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
+    #  run: |
+    #    echo KEY: '${TWINE_PASSWORD}'
+    #    twine check dist/*
+    #    twine upload --verbose --skip-existing dist/*
 
-      deploy-staging:
-        name: Deploy to staging environment
-        needs: build-test
-        if: github.ref == 'refs/heads/staging' && github.event_name != 'pull_request'
-        runs-on: ubuntu-latest
-        # let's define the environment for which this job is intended - staging
-        environment:
-          name: staging
-          url: http://example-staging.myapp.com
-        #steps:
-        #  - name: Pull Image from docker hub
-        #    ...
+  deploy-staging:
+    name: Deploy to staging environment
+    needs: build-test
+    if: github.ref == 'refs/heads/staging' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # let's define the environment for which this job is intended - staging
+    environment:
+      name: staging
+      url: http://example-staging.myapp.com
+    #steps:
+    #  - name: Pull Image from docker hub
+    #    ...
 
-      deploy-prod:
-        name: Deploy to prod environment
-        # depends on staging deployment - not realistic since if we push to prod, we are not triggering staging pipeline, but just for ilusttration
-        needs: deploy-staging
-        if: github.ref == 'refs/heads/prod' && github.event_name != 'pull_request'
-        runs-on: ubuntu-latest
-        environment:
-          name: prod
-          url: http://myapp.com
-        #steps:
-        #  - name: Pull Image from docker hub
-        #    ...
+  deploy-prod:
+    name: Deploy to prod environment
+    # depends on staging deployment - not realistic since if we push to prod, we are not triggering staging pipeline, but just for ilusttration
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/prod' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: http://myapp.com
+    #steps:
+    #  - name: Pull Image from docker hub
+    #    ...
 
 
   # Another job to deploy the app. It will be executed only if the build-test job is successful
