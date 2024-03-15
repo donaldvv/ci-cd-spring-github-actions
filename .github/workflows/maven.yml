@@ -49,6 +49,7 @@ jobs:
       run: echo "NOW=$(date -u +'%Y%m%dT%H%M%S')" >> $GITHUB_ENV
 
     - name: Build & push Docker image
+      if: github.event_name != 'pull_request'
       uses: mr-smithers-excellent/docker-build-push@v5
       with:
         # secrets are stored in the GitHub repository settings
