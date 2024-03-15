@@ -75,6 +75,9 @@ jobs:
     environment:
       name: dev
       url: https://example-dev.myapp.com # can be retrieved dynamically - just for visualization
+    steps:
+      - name: This was executed
+        run: echo "Deploy Dev is running"
     # Now we would pull the image from docker hub and deploy it to the corresponding dev environment (which we can
     # define variables and secrets in the Environments for dev). With the chose image storing strat we would need to find docker image by tag: commitSHA-current_date
     #steps:
@@ -100,9 +103,11 @@ jobs:
     environment:
       name: staging
       url: http://example-staging.myapp.com
-    #steps:
-    #  - name: Pull Image from docker hub
-    #    ...
+    steps:
+      - name: This was executed
+        run: echo "Deploy Staging is running"
+      #- name: Pull Image from docker hub
+      #  ...
 
   deploy-prod:
     name: Deploy to prod environment
@@ -113,9 +118,11 @@ jobs:
     environment:
       name: prod
       url: http://myapp.com
-    #steps:
-    #  - name: Pull Image from docker hub
-    #    ...
+    steps:
+      - name: This was executed
+        run: echo "Deploy Prod is running"
+      #- name: Pull Image from docker hub
+      #  ...
 
 
   # Another job to deploy the app. It will be executed only if the build-test job is successful
