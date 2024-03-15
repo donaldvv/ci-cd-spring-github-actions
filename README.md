@@ -21,9 +21,6 @@
   This way we can always track the exact version of the image that is running in any environment.
 - For more see: https://www.reddit.com/r/devops/comments/wnhisp/what_is_your_docker_image_tagging_strategy/
 
-### Seperate workflow yaml file per env
+### Separate workflow yaml file per env
 - Generally if we have many environments, we need to use single workflow file for example for the deploy pipeline and 
 utilize the configured environments: https://stackoverflow.com/questions/76241660/github-action-runner-deploy-2-environments-dev-and-prod-on-a-same-server
-
-# TODO: Check "reusable workflows", then decide if i will create 3 different .yml files for dev, staging, prod or just one file for all.
-# also check if I use different files for each env, which parts can I share (e.g. build should be the same, only deploy will be totally different)
